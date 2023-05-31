@@ -35,6 +35,7 @@ class LesmoyensRepository extends ServiceEntityRepository
             'id' => (integer)$lesmoyens->getId(),
             'nom' => (string)$lesmoyens->getNom(),
             'marque' => (string)$lesmoyens->getMarque(),
+            'model' => (string)$lesmoyens->getModel(),
             'couleur' => (string)$lesmoyens->getCouleur(),
             'annee' => (string)$lesmoyens->getAnnee()
         ];

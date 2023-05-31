@@ -7,8 +7,13 @@
     use Symfony\Component\Console\Command\Command;
     use Symfony\Component\Console\Input\InputInterface;
     use Symfony\Component\Console\Output\OutputInterface;
-    class WebsocketServerCommand extends Command
-    {    protected static $defaultName = "run:websocket-server";
+    use Psr\Log\LoggerInterface;
+    use Psr\Log\LoggerAwareInterface;
+    class WebsocketServerCommand extends Command 
+    { 
+    
+       protected static $defaultName = "run:websocket-server";
+
         protected function execute(InputInterface $input, OutputInterface $output)
         {
             $port = 3001;
@@ -16,7 +21,7 @@
             $server = IoServer::factory(
                 new HttpServer(
                     new WsServer(
-                        new MessageHandler()
+                        new MessageHandler($output)
                     )
                 ),
                 $port

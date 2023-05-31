@@ -37,13 +37,7 @@ class ChauffRepository extends ServiceEntityRepository
 
     public function transform(Chauff $chauff)
     {
-        return [
-            'id' => (integer)$chauff->getId(),
-            'numpermis' => (string)$chauff->getNumpermis(),
-            'username' => (string)$chauff->getUsername(),
-            'email' => (string)$chauff->getEmail(),
-            'password' => (string)$chauff->getPassword()
-        ];
+        return  $chauff;
     }
     public function updateChauff(Chauff $chauff): Chauff
     {
@@ -71,14 +65,5 @@ class ChauffRepository extends ServiceEntityRepository
     /**
      * Used to upgrade (rehash) the user's password automatically over time.
      */
-    public function upgradePassword(UserInterface $user, string $newHashedPassword): void
-    {
-        if (!$user instanceof Chauff) {
-            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', \get_class($user)));
-        }
-
-        $user->setPassword($newHashedPassword);
-        $this->_em->persist($user);
-        $this->_em->flush();
-    }
+  
 }

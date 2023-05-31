@@ -1,12 +1,11 @@
 <?php
 
 namespace App\Entity;
-
+use Symfony\Component\Serializer\Annotation\Ignore;
 use App\Repository\LesmoyensRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\UserInterface;
 use App\Entity\Chauff;
 
 #[ORM\Entity(repositoryClass: LesmoyensRepository::class)]
@@ -28,14 +27,18 @@ class Lesmoyens
 
     #[ORM\Column(length: 255)]
     private ?string $annee = null;
-    #[ORM\Column(type:"simple_array")]
-    private  $roles;
+
 
     #[ORM\Column(type:"string")]
     private  $etat ;
 
-    #[ORM\ManyToMany(targetEntity: chauff::class, inversedBy: 'lesmoyens')]
-    private Collection $relation;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $model = null;
+/** @Ignore() */
+
+    #[ORM\ManyToOne(inversedBy: 'moyens')]
+    private ?Chauff $chauff = null;
 
 
 
@@ -95,23 +98,7 @@ class Lesmoyens
     {
 
     }
-    public function getSalt()
-    {
-        return null;
-    }
-
-    public function eraseCredentials()
-    {
-        return null;
-    }
-    public function getRoles()
-    {
-        return $this->roles;
-    }
-    public function setRoles(array $roles): void
-    {
-        $this->roles = $roles;
-    }
+   
     public function getEtat()
     {
         return $this->etat;
@@ -124,23 +111,28 @@ class Lesmoyens
     /**
      * @return Collection<int, chauff>
      */
-    public function getRelation(): Collection
+    
+
+    public function getModel(): ?string
     {
-        return $this->relation;
+        return $this->model;
     }
 
-    public function addRelation(chauff $relation): self
+    public function setModel(?string $model): self
     {
-        if (!$this->relation->contains($relation)) {
-            $this->relation->add($relation);
-        }
+        $this->model = $model;
 
         return $this;
     }
 
-    public function removeRelation(chauff $relation): self
+    public function getChauff(): ?Chauff
     {
-        $this->relation->removeElement($relation);
+        return $this->chauff;
+    }
+
+    public function setChauff(?Chauff $chauff): self
+    {
+        $this->chauff = $chauff;
 
         return $this;
     }

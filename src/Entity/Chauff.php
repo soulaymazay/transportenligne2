@@ -1,18 +1,17 @@
 <?php
 
 namespace App\Entity;
-
+use Symfony\Component\Serializer\Annotation\Ignore;
 use App\Repository\ChauffRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\UserInterface;
 use App\Entity\Lesmoyens;
 use App\Entity\Clients;
 
 
 #[ORM\Entity(repositoryClass: ChauffRepository::class)]
-class Chauff implements UserInterface
+class Chauff 
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -22,30 +21,26 @@ class Chauff implements UserInterface
     #[ORM\Column(length: 255)]
     private ?string $numpermis = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $username = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $email = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $password = null;
-    #[ORM\Column(type:"simple_array")]
-    private $roles;
 
     #[ORM\Column(type:"string")]
     private $etat;
 
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
-    private ?clients $relation = null;
+    private ?User $user = null;
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    private ?Client $relation = null;
+/** @Ignore() */
+    #[ORM\OneToMany(mappedBy: 'chauff', targetEntity: Lesmoyens::class)]
+    private Collection $moyens;
 
-    #[ORM\ManyToMany(targetEntity: Lesmoyens::class, mappedBy: 'relation')]
-    private Collection $lesmoyens;
 
+    public function setUser(User $userToSet) {
+        $this->user=$userToSet;
+    }
     public function __construct()
     {
-        $this->lesmoyens = new ArrayCollection();
+        $this->moyens = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -67,48 +62,10 @@ class Chauff implements UserInterface
 
     public function getUsername(): ?string
     {
-        return $this->username;
+        return $this->user->getUsername();
     }
 
-    public function setUsername(string $username): self
-    {
-        $this->username = $username;
 
-        return $this;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): self
-    {
-        $this->password = $password;
-
-        return $this;
-    }
-    public function getRoles()
-     {
-         return $this->roles;
-     }
-
-     public function setRoles(array $roles): void
-     {
-         $this->roles = $roles;
-     }
 
     public function getEtat(): ?string
     {
@@ -121,29 +78,18 @@ class Chauff implements UserInterface
 
         return $this;
     }
-
-    // Implémentation des méthodes de l'interface UserInterface
-
-    public function getSalt()
+    public function getUser(): ?User
     {
-        // Non nécessaire avec l'algorithme bcrypt utilisé pour le hachage du mot de passe
+        return $this->user;
     }
 
-    public function eraseCredentials()
-    {
-        // Cette méthode n'a pas de logique à implémenter dans ce cas-ci
-    }
-    public function getUserIdentifier()
-    {
 
-    }
-
-    public function getRelation(): ?clients
+    public function getRelation(): ?Client
     {
         return $this->relation;
     }
 
-    public function setRelation(?Clients $relation): self
+    public function setRelation(?Client $relation): self
     {
         $this->relation = $relation;
 
@@ -153,27 +99,31 @@ class Chauff implements UserInterface
     /**
      * @return Collection<int, Lesmoyens>
      */
-    public function getLesmoyens(): Collection
+    public function getMoyens(): Collection
     {
-        return $this->lesmoyens;
+        return $this->moyens;
     }
 
-    public function addLesmoyen(Lesmoyens $lesmoyen): self
+    public function addMoyen(Lesmoyens $moyen): self
     {
-        if (!$this->lesmoyens->contains($lesmoyen)) {
-            $this->lesmoyens->add($lesmoyen);
-            $lesmoyen->addRelation($this);
+        if (!$this->moyens->contains($moyen)) {
+            $this->moyens->add($moyen);
+            $moyen->setChauff($this);
         }
 
         return $this;
     }
 
-    public function removeLesmoyen(Lesmoyens $lesmoyen): self
+    public function removeMoyen(Lesmoyens $moyen): self
     {
-        if ($this->lesmoyens->removeElement($lesmoyen)) {
-            $lesmoyen->removeRelation($this);
+        if ($this->moyens->removeElement($moyen)) {
+            // set the owning side to null (unless already changed)
+            if ($moyen->getChauff() === $this) {
+                $moyen->setChauff(null);
+            }
         }
 
         return $this;
     }
+
 }

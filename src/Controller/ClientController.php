@@ -2,9 +2,10 @@
 
 namespace App\Controller;
 
-use App\Entity\Clients;
-use App\Form\ClientsType;
-use App\Repository\ClientsRepository;
+use App\Entity\Client;
+use App\Entity\User;
+use App\Form\ClientType;
+use App\Repository\ClientRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,16 +17,16 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * @Route("/api", name="api_")
+ * @Route("/api/client", name="api_")
  */
 
 class ClientController extends AbstractController
 // { private $logger;
     {
     /**
-     * @Route("/add", name="create_clients", methods={"POST"})
+     * @Route(name="create_client", methods={"POST"})
      */
-    public function createClients(Request $request, EntityManagerInterface $em, ClientsRepository $clientsRepository, UserPasswordEncoderInterface $encoder): Response
+    public function createclient(Request $request, EntityManagerInterface $em, ClientRepository $clientRepository, UserPasswordEncoderInterface $encoder): Response
 
     // {$this->logger = $logger;
         {
@@ -38,60 +39,59 @@ class ClientController extends AbstractController
     }
 
 
-    $clients = new Clients;
+    $client = new Client;
+    $user=new User;
+    $user->setName($request->get('username'));
+    $user->setEmail($request->get('email'));
+    $user->setPassword($request->get('password'));
+    $user->setRoles(["ROLE_CLIENT"]);
+    $client->setEtat("actif");
+    $hash=$encoder->encodePassword($user, $user->getPassword());
+    $user->setPassword($hash);
+    $client->setUser($user);
+    $em->persist($user);
 
-    $clients->setUsername($request->get('username'));
-    $clients->setEmail($request->get('email'));
-    $clients->setPassword($request->get('password'));
-    $clients->setRoles(["ROLE_CLIENT"]);
-    $clients->setEtat("actif");
-    $hash=$encoder->encodePassword($clients, $clients->getPassword());
-    $clients->setPassword($hash);
-    $em->persist($clients);
+    $em->persist($client);
     $em->flush();
 
-    return $this->json($clientsRepository->transform($clients));
+    return $this->json($clientRepository->transform($client));
 }
 /**
-* @Route("/list", name="list_clients", methods={"GET"})
+* @Route(name="list_client", methods={"GET"})
 */
-public function list(clientsRepository $clientsRepository)
+public function list(clientRepository $clientRepository)
 {
-    $clients = $clientsRepository->transformAll();
-    return $this->json($clients);
+    $client = $clientRepository->transformAll();
+    return $this->json($client);
 }/**
- * @Route("/clients/{id}", name="update_clients", methods={"PUT"})
+ * @Route("/{id}", name="update_client", methods={"PUT"})
  */
-public function update($id, Request $request, ClientsRepository $clientsRepository)
+public function update($id, Request $request, ClientRepository $clientRepository)
 {
-    $clients = $clientsRepository->findOneBy(['id' => $id]);
-
-    if (!$clients) {
+    /** @var Client $client **/
+     $client = $clientRepository->findOneBy(['user_id' => $id]);
+    if (!$client) {
         return $this->json(['message' => 'Client not found'], 404);
     }
-
     $data = json_decode($request->getContent(), true);
 
-    empty($data['username']) ? true : $clients->setUsername($data['username']);
-    empty($data['email']) ? true : $clients->setEmail($data['email']);
-    empty($data['password']) ? true : $clients->setPassword($data['password']);
+    empty($data['etat']) ? true : $client->setEtat($data['etat']);
 
-    $updateClients = $clientsRepository->updateClients($clients);
+
+    $updateClient = $clientRepository->updateClient($client);
     $data = [
-        'id' => $clients->getId(),
-        'username' => $clients->getUsername(),
-        'email' => $clients->getEmail(),
-        'password' => $clients->getPassword(),
+        'id' => $client->getId(),
+        'etat' => $client->getEtat(),
+    
     ];
-    return $this->json($data);
-    return $this->json($updateClients);
+    return $this->json($updateClient);
 }
 /**
- * @Route("/clients/{id}", name="delete_clients", methods={"DELETE"})
+ * @Route("/{id}", name="delete_client", methods={"DELETE"})
  */
 public function delete($id, EntityManagerInterface $entityManager)
 {
-    $client = $entityManager->getRepository(Clients::class)->findOneBy(['id' => $id]);
+    $client = $entityManager->getRepository(client::class)->findOneBy(['user_id' => $id]);
     $entityManager->remove($client);
     $entityManager->flush();
     return new JsonResponse(['status' => 'client deleted']);

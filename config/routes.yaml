@@ -65,3 +65,5 @@ app_delete_moyen:
     controller: App\Controller\ClientController::delete
     methods: DELETE
     format: json    
+api_login_check:
+    path: /api/login_check
